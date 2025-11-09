@@ -3,14 +3,15 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
-		"start": "wrangler dev",
-		"test": "vitest",
-		"cf-typegen": "wrangler types"
+		"deploy": "wrangler deploy --minify",
+		"lint-fix": "prettier --write .",
+		"cf-typegen": "wrangler types",
+		"test": "vitest"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
+		"prettier": "^3.6.2",
 		"typescript": "^5.5.2",
 		"vitest": "~3.2.0",
 		"wrangler": "^4.46.0"
