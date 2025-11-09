@@ -9,8 +9,13 @@
 		"cf-typegen": "wrangler types",
 		"test": "vitest"
 	},
+	"dependencies": {
+		"hono": "^4.10.4",
+		"zod": "^4.1.12"
+	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
+		"@types/node": "^24.10.0",
 		"prettier": "^3.6.2",
 		"typescript": "^5.5.2",
 		"vitest": "~3.2.0",
