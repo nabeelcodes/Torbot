@@ -1,25 +1,13 @@
-import type { TorboxCreateResponse, TorboxTorrentlistResponse } from '../types';
+import type { TorboxCreateResponse, TorboxTorrentlistResponse, EnvBindings } from '../types';
 import { TorboxCreateSchema, TorboxMylistSchema } from '../validators';
 
-const TORBOX_BASE_URL = process.env.TORBOX_API_BASE_URL || 'https://api.torbox.app/v1';
-
-const TORBOX_KEY = (() => {
-	try {
-		const key = process.env.TORBOX_API_KEY;
-		if (!key) throw new Error('env var missing: TORBOX_API_KEY');
-		return key;
-	} catch (error) {
-		console.error(error);
-	}
-})();
-
-const createTorrent = async (magnet: string): Promise<TorboxCreateResponse> => {
+const createTorrent = async (env: EnvBindings, magnet: string): Promise<TorboxCreateResponse> => {
 	try {
 		const form = new FormData();
 		form.append('magnet', magnet);
-		const responseFromTorbox = await fetch(`${TORBOX_BASE_URL}/api/torrents/createtorrent`, {
+		const responseFromTorbox = await fetch(`${env.TORBOX_API_BASE_URL}/api/torrents/createtorrent`, {
 			method: 'POST',
-			headers: { Authorization: `Bearer ${TORBOX_KEY}` },
+			headers: { Authorization: `Bearer ${env.TORBOX_API_KEY}` },
 			body: form as unknown as BodyInit,
 		});
 		const jsonData = await responseFromTorbox.json();
@@ -35,12 +23,12 @@ const createTorrent = async (magnet: string): Promise<TorboxCreateResponse> => {
 	}
 };
 
-const fetchTorrentlist = async (): Promise<TorboxTorrentlistResponse> => {
-	const res = await fetch(`${TORBOX_BASE_URL}/api/torrents/mylist`, {
+const fetchTorrentlist = async (env: EnvBindings): Promise<TorboxTorrentlistResponse> => {
+	const responseFromTorbox = await fetch(`${env.TORBOX_API_BASE_URL}/api/torrents/mylist`, {
 		method: 'GET',
-		headers: { Authorization: `Bearer ${TORBOX_KEY}` },
+		headers: { Authorization: `Bearer ${env.TORBOX_API_KEY}` },
 	});
-	const json = await res.json();
+	const json = await responseFromTorbox.json();
 	const parsed = TorboxMylistSchema.parse(json);
 	return parsed;
 };

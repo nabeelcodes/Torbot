@@ -1,3 +1,9 @@
+export type EnvBindings = {
+	TELEGRAM_BOT_TOKEN: string;
+	TORBOX_API_KEY: string;
+	TORBOX_API_BASE_URL: string;
+};
+
 export type TelegramUpdate = {
 	update_id: number;
 	message?: TelegramMessage;
