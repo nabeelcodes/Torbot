@@ -2,5 +2,5 @@
 	"files.associations": {
 		"wrangler.json": "jsonc"
 	},
-	"cSpell.words": ["torbot"]
+	"cSpell.words": ["btih", "createtorrent", "Mylist", "torbot", "Torbox", "Torrentlist"]
 }
