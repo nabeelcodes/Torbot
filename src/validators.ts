@@ -79,6 +79,6 @@ export const TorboxMylistSchema = z.object({
 export const TorBoxDownloadSchema = z.object({
 	success: z.boolean(),
 	error: z.string().nullable(),
-	detail: z.string(),
-	data: z.string(),
+	detail: z.string().optional(),
+	data: z.string().optional(),
 });

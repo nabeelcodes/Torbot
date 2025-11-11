@@ -33,9 +33,7 @@ const handleBotStart = async (env: EnvBindings, message: TelegramMessage) => {
 			env,
 			chatId,
 			`
-			Hey ${name}! Send me a magnet link.
-			- Use /add for adding a torrent(magnet link).
-			- Use /stats for a summary.
+			Hey ${name}! Welcome to TorBot! Use /help to see available commands.
 			`,
 		);
 	} catch (error) {
@@ -43,4 +41,20 @@ const handleBotStart = async (env: EnvBindings, message: TelegramMessage) => {
 	}
 };
 
-export { callTelegramApi, sendMessage, handleBotStart, isMagnet };
+const handleBotHelp = async (env: EnvBindings, message: TelegramMessage) => {
+	try {
+		const chatId = message.chat.id;
+		if (!chatId) throw new Error('Chat ID missing!');
+		await sendMessage(
+			env,
+			chatId,
+			`
+			Available commands:\n- /add <magnet_link> - Add new torrent.\n- /stats - Get a summary of added torrents.
+			`,
+		);
+	} catch (error) {
+		console.error(error);
+	}
+};
+
+export { isMagnet, callTelegramApi, sendMessage, handleBotStart, handleBotHelp };

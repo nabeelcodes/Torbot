@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { isMagnet, handleBotStart, sendMessage } from './controllers/telegramControllers';
+import { isMagnet, handleBotStart, sendMessage, handleBotHelp } from './controllers/telegramControllers';
 import { createTorrent, fetchTorrentlist } from './controllers/torboxControllers';
 import type { EnvBindings, TelegramUpdate } from './types';
 
@@ -29,6 +29,11 @@ app.post('/webhook', async (context) => {
 			return context.json({ ok: true });
 		}
 
+		if (text === '/help') {
+			await handleBotHelp(env, msg);
+			return context.json({ ok: true });
+		}
+
 		if (text === '/stats') {
 			try {
 				const response = await fetchTorrentlist(env);
@@ -41,10 +46,7 @@ app.post('/webhook', async (context) => {
 				const data = response.data || [];
 				const totalCount = data.length;
 
-				const latestFive = data
-					.slice()
-					.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-					.slice(0, 5);
+				const latestFive = data.slice(0, 5).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
 				const formatBytes = (bytes?: number): string => {
 					if (!bytes || bytes <= 0) return 'unknown';
@@ -76,21 +78,9 @@ app.post('/webhook', async (context) => {
 						const added = timeAgo(torrent.created_at);
 						const finished = torrent.download_finished ? 'Yes' : 'No';
 						const cached = torrent.cached ? 'Yes' : 'No';
-						return `
-						${index + 1}.
-						ID: ${id}
-						${name}
-						${size}
-						Added: ${added}
-						Finished: ${finished}
-						Cached: ${cached}
-						`;
+						return `${index + 1}.\nID: ${id}\n${name}\n${size}\nAdded: ${added}\nFinished: ${finished}\nCached: ${cached}`;
 					});
-					const message = `
-					Total Torrents: ${totalCount}
-					Last ${lines.length} Torrents:
-					${lines.join('\n')}
-					`;
+					const message = `Total Torrents: ${totalCount}\nLast ${lines.length} Torrents:\n${lines.join('\n\n')}`;
 					await sendMessage(env, chatId, message);
 				}
 			} catch (err: any) {
@@ -110,19 +100,15 @@ app.post('/webhook', async (context) => {
 			await sendMessage(env, chatId, 'Adding torrent to TorBox... 🔁');
 
 			try {
-				const { success, message, download_url, data, detail } = await createTorrent(env, magnet);
-				if (success) {
+				const response = await createTorrent(env, magnet);
+				if (response.success) {
 					await sendMessage(
 						env,
 						chatId,
-						`
-						${message}
-						Torrent Id: ${data?.torrent_id}
-						Download url: ${download_url}
-						`,
+						`${response.message}\nTorrent Id: ${response.data?.torrent_id}\nDownload url: ${response.download_url}`,
 					);
 				} else {
-					await sendMessage(env, chatId, `TorBox rejected it: ${detail || 'unknown'}`);
+					await sendMessage(env, chatId, `TorBox rejected it: ${response.detail || 'unknown'}`);
 				}
 			} catch (err: any) {
 				await sendMessage(env, chatId, `Error adding torrent: ${err.message}`);
