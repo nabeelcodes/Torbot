@@ -28,7 +28,7 @@ const getDownloadLink = async (env: EnvBindings, torrentId: string | undefined):
 };
 
 const fetchTorrentlist = async (env: EnvBindings): Promise<TorboxTorrentlistResponse> => {
-	const response = await fetch(`${env.TORBOX_API_BASE_URL}/api/torrents/mylist?limit=5`, {
+	const response = await fetch(`${env.TORBOX_API_BASE_URL}/api/torrents/mylist`, {
 		method: 'GET',
 		headers: { Authorization: `Bearer ${env.TORBOX_API_KEY}` },
 	});

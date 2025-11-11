@@ -38,10 +38,61 @@ app.post('/webhook', async (context) => {
 					return context.json({ ok: true });
 				}
 
-				const torrents = (response.data && response.data) || [];
-				const count = torrents.length;
+				const data = response.data || [];
+				const totalCount = data.length;
 
-				await sendMessage(env, chatId, `Total Torrents: ${count}`);
+				const latestFive = data
+					.slice()
+					.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+					.slice(0, 5);
+
+				const formatBytes = (bytes?: number): string => {
+					if (!bytes || bytes <= 0) return 'unknown';
+					const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+					const i = Math.floor(Math.log(bytes) / Math.log(1024));
+					return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
+				};
+
+				const timeAgo = (iso?: string): string => {
+					if (!iso) return 'unknown';
+					const diff = Date.now() - new Date(iso).getTime();
+					const seconds = Math.floor(diff / 1000);
+					if (seconds < 60) return `${seconds}s ago`;
+					const minutes = Math.floor(seconds / 60);
+					if (minutes < 60) return `${minutes}m ago`;
+					const hours = Math.floor(minutes / 60);
+					if (hours < 24) return `${hours}h ${minutes % 60}m ago`;
+					const days = Math.floor(hours / 24);
+					return `${days}d ${hours % 24}h ago`;
+				};
+
+				if (latestFive.length === 0) {
+					await sendMessage(env, chatId, `Total Torrents: ${totalCount}\nNo torrents to show.`);
+				} else {
+					const lines = latestFive.map((torrent, index) => {
+						const id = torrent.id;
+						const name = torrent.name || 'unnamed';
+						const size = formatBytes(torrent.size);
+						const added = timeAgo(torrent.created_at);
+						const finished = torrent.download_finished ? 'Yes' : 'No';
+						const cached = torrent.cached ? 'Yes' : 'No';
+						return `
+						${index + 1}.
+						ID: ${id}
+						${name}
+						${size}
+						Added: ${added}
+						Finished: ${finished}
+						Cached: ${cached}
+						`;
+					});
+					const message = `
+					Total Torrents: ${totalCount}
+					Last ${lines.length} Torrents:
+					${lines.join('\n')}
+					`;
+					await sendMessage(env, chatId, message);
+				}
 			} catch (err: any) {
 				await sendMessage(env, chatId, `Error fetching stats: ${err.message}`);
 			}
@@ -59,12 +110,19 @@ app.post('/webhook', async (context) => {
 			await sendMessage(env, chatId, 'Adding torrent to TorBox... 🔁');
 
 			try {
-				const response = await createTorrent(env, magnet);
-				if (response.success) {
-					const id = (response.data && response.data.torrent_id) || undefined;
-					await sendMessage(env, chatId, `Added ✅${id ? ` — ID: ${id}` : ''}`);
+				const { success, message, download_url, data, detail } = await createTorrent(env, magnet);
+				if (success) {
+					await sendMessage(
+						env,
+						chatId,
+						`
+						${message}
+						Torrent Id: ${data?.torrent_id}
+						Download url: ${download_url}
+						`,
+					);
 				} else {
-					await sendMessage(env, chatId, `TorBox rejected it: ${response.detail || 'unknown'}`);
+					await sendMessage(env, chatId, `TorBox rejected it: ${detail || 'unknown'}`);
 				}
 			} catch (err: any) {
 				await sendMessage(env, chatId, `Error adding torrent: ${err.message}`);
