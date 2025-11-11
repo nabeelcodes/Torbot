@@ -31,16 +31,17 @@ app.post('/webhook', async (context) => {
 
 		if (text === '/stats') {
 			try {
-				const r = await fetchTorrentlist(env);
-				if (!r.success) {
-					await sendMessage(env, chatId, `Failed to fetch stats: ${r.detail || 'unknown'}`);
+				const response = await fetchTorrentlist(env);
+
+				if (!response.success) {
+					await sendMessage(env, chatId, `Failed to fetch stats: ${response.detail || 'unknown'}`);
 					return context.json({ ok: true });
 				}
-				const torrents = (r.data && (r.data.torrents || r.data)) || [];
-				const count = Array.isArray(torrents) ? torrents.length : 0;
-				const used = Array.isArray(torrents) ? torrents.reduce((acc: number, t: any) => acc + (t.total_bytes || t.size_bytes || 0), 0) : 0;
-				const usedMB = (used / 1024 / 1024).toFixed(2);
-				await sendMessage(env, chatId, `Torrents: ${count}\nUsed: ${usedMB} MB`);
+
+				const torrents = (response.data && response.data) || [];
+				const count = torrents.length;
+
+				await sendMessage(env, chatId, `Total Torrents: ${count}`);
 			} catch (err: any) {
 				await sendMessage(env, chatId, `Error fetching stats: ${err.message}`);
 			}

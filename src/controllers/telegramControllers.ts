@@ -29,7 +29,15 @@ const handleBotStart = async (env: EnvBindings, message: TelegramMessage) => {
 		const chatId = message.chat.id;
 		if (!chatId) throw new Error('Chat ID missing!');
 		const name = message.from?.first_name || 'there';
-		await sendMessage(env, chatId, `Hey ${name}! Send me a magnet link. Use /stats for a summary.`);
+		await sendMessage(
+			env,
+			chatId,
+			`
+			Hey ${name}! Send me a magnet link.
+			- Use /add for adding a torrent(magnet link).
+			- Use /stats for a summary.
+			`,
+		);
 	} catch (error) {
 		console.error(error);
 	}
