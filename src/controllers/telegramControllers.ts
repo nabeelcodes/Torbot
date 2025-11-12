@@ -20,7 +20,6 @@ const sendMessage = async (env: EnvBindings, chatId: number, text: string) => {
 	return callTelegramApi(env, 'sendMessage', {
 		chat_id: chatId,
 		text,
-		parse_mode: 'Markdown',
 	});
 };
 
@@ -29,13 +28,7 @@ const handleBotStart = async (env: EnvBindings, message: TelegramMessage) => {
 		const chatId = message.chat.id;
 		if (!chatId) throw new Error('Chat ID missing!');
 		const name = message.from?.first_name || 'there';
-		await sendMessage(
-			env,
-			chatId,
-			`
-			Hey ${name}! Welcome to TorBot! Use /help to see available commands.
-			`,
-		);
+		return await sendMessage(env, chatId, `Hey ${name}! Welcome to TorBot! Use /help to see available commands.`);
 	} catch (error) {
 		console.error(error);
 	}
@@ -45,12 +38,10 @@ const handleBotHelp = async (env: EnvBindings, message: TelegramMessage) => {
 	try {
 		const chatId = message.chat.id;
 		if (!chatId) throw new Error('Chat ID missing!');
-		await sendMessage(
+		return await sendMessage(
 			env,
 			chatId,
-			`
-			Available commands:\n- /add <magnet_link> - Add new torrent.\n- /stats - Get a summary of added torrents.
-			`,
+			`Available commands:\n- /add <magnet_link> - Add new torrent.\n- /stats - Get a summary of available torrents.`,
 		);
 	} catch (error) {
 		console.error(error);

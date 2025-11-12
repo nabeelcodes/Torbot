@@ -1,22 +1,10 @@
 import type { TorboxCreateResponse, TorboxTorrentlistResponse, EnvBindings } from '../types';
 import { TorboxCreateSchema, TorboxMylistSchema, TorBoxDownloadSchema } from '../validators';
 
-const extractName = (magnet: string): string => {
-	const match = magnet.match(/dn=([^&]+)/);
-	return match ? decodeURIComponent(match[1]) : magnet.slice(0, 50);
-};
-
-const formatSize = (bytes?: number): string => {
-	if (!bytes) return 'unknown size';
-	const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-	const i = Math.floor(Math.log(bytes) / Math.log(1024));
-	return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
-};
-
 const getDownloadLink = async (env: EnvBindings, torrentId: string | undefined): Promise<string | undefined> => {
 	try {
 		if (!torrentId) throw new Error('Missing torrentId!');
-		const url = `${env.TORBOX_API_BASE_URL}/api/torrents/requestdl?token=${env.TORBOX_API_KEY}&torrent_id=${torrentId}&zip_link=true&redirect=true`;
+		const url = `${env.TORBOX_API_BASE_URL}/api/torrents/requestdl?token=${env.TORBOX_API_KEY}&torrent_id=${torrentId}&zip_link=true&redirect=false`;
 		const responseFromTorBox = await fetch(url);
 		const jsonData = await responseFromTorBox.json();
 		const parsedData = TorBoxDownloadSchema.parse(jsonData);
@@ -39,23 +27,6 @@ const fetchTorrentlist = async (env: EnvBindings): Promise<TorboxTorrentlistResp
 
 const createTorrent = async (env: EnvBindings, magnet: string): Promise<TorboxCreateResponse> => {
 	try {
-		// Checking for pre-existing torrents (duplicate check)
-		const myList = await fetchTorrentlist(env);
-		const nameFromMagnet = extractName(magnet).toLowerCase();
-
-		const duplicate = myList.data.find((t) => t.magnet === magnet || t.name?.toLowerCase().includes(nameFromMagnet.slice(0, 30)));
-		const torrentIdForDuplicate = duplicate?.id.toString();
-		const downloadLinkForDuplicate = await getDownloadLink(env, torrentIdForDuplicate);
-
-		if (duplicate) {
-			return {
-				success: false,
-				error: `⚠️ Torrent “${duplicate.name}” already added (${formatSize(duplicate.size)}).`,
-				download_url: downloadLinkForDuplicate ? downloadLinkForDuplicate : "Can't fetch download url!",
-			};
-		}
-
-		// Add new torrent if not found
 		const form = new FormData();
 		form.append('magnet', magnet);
 
@@ -66,6 +37,7 @@ const createTorrent = async (env: EnvBindings, magnet: string): Promise<TorboxCr
 		});
 
 		const jsonData = await responseFromTorbox.json();
+
 		const parsedData = TorboxCreateSchema.parse(jsonData);
 
 		if (!parsedData.success && parsedData.error) {
@@ -90,4 +62,4 @@ const createTorrent = async (env: EnvBindings, magnet: string): Promise<TorboxCr
 	}
 };
 
-export { createTorrent, fetchTorrentlist };
+export { createTorrent, fetchTorrentlist, getDownloadLink };

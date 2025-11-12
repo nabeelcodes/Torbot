@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { isMagnet, handleBotStart, sendMessage, handleBotHelp } from './controllers/telegramControllers';
-import { createTorrent, fetchTorrentlist } from './controllers/torboxControllers';
+import { createTorrent, fetchTorrentlist, getDownloadLink } from './controllers/torboxControllers';
 import type { EnvBindings, TelegramUpdate } from './types';
 
 const app = new Hono<{ Bindings: EnvBindings }>();
@@ -69,7 +69,7 @@ app.post('/webhook', async (context) => {
 				};
 
 				if (latestFive.length === 0) {
-					await sendMessage(env, chatId, `Total Torrents: ${totalCount}\nNo torrents to show.`);
+					await sendMessage(env, chatId, `Total Torrents: ${totalCount}\n\nNo torrents to show.`);
 				} else {
 					const lines = latestFive.map((torrent, index) => {
 						const id = torrent.id;
@@ -78,9 +78,9 @@ app.post('/webhook', async (context) => {
 						const added = timeAgo(torrent.created_at);
 						const finished = torrent.download_finished ? 'Yes' : 'No';
 						const cached = torrent.cached ? 'Yes' : 'No';
-						return `${index + 1}.\nID: ${id}\n${name}\n${size}\nAdded: ${added}\nFinished: ${finished}\nCached: ${cached}`;
+						return `${index + 1}. ${name}\nID: ${id}\nSize: ${size}\nAdded: ${added}\nFinished: ${finished}\nCached: ${cached}`;
 					});
-					const message = `Total Torrents: ${totalCount}\nLast ${lines.length} Torrents:\n${lines.join('\n\n')}`;
+					const message = `Total Torrents: ${totalCount}\n\nLast ${lines.length} Torrents:\n${lines.join('\n\n')}`;
 					await sendMessage(env, chatId, message);
 				}
 			} catch (err: any) {
@@ -105,7 +105,7 @@ app.post('/webhook', async (context) => {
 					await sendMessage(
 						env,
 						chatId,
-						`${response.message}\nTorrent Id: ${response.data?.torrent_id}\nDownload url: ${response.download_url}`,
+						`${response.message}\nTorrent Id: ${response.data?.torrent_id}\nDownload: ${response.download_url}`,
 					);
 				} else {
 					await sendMessage(env, chatId, `TorBox rejected it: ${response.detail || 'unknown'}`);
