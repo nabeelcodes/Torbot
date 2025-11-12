@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { isMagnet, handleBotStart, sendMessage, handleBotHelp } from './controllers/telegramControllers';
-import { createTorrent, fetchTorrentlist, getDownloadLink } from './controllers/torboxControllers';
+import { createTorrent, fetchTorrentlist } from './controllers/torboxControllers';
 import type { EnvBindings, TelegramUpdate } from './types';
 
 const app = new Hono<{ Bindings: EnvBindings }>();
@@ -86,6 +86,11 @@ app.post('/webhook', async (context) => {
 			} catch (err: any) {
 				await sendMessage(env, chatId, `Error fetching stats: ${err.message}`);
 			}
+			return context.json({ ok: true });
+		}
+
+		if (text === '/add') {
+			await sendMessage(env, chatId, 'Please provide a valid magnet link, e.g. /add magnet:?xt=urn:btih:...');
 			return context.json({ ok: true });
 		}
 
