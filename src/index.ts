@@ -24,17 +24,17 @@ app.post('/webhook', async (context) => {
 			return context.json({ ok: true });
 		}
 
-		if (text === '/start') {
+		if (text === '/start' || '/start@Tor_box_bot') {
 			await handleBotStart(env, msg);
 			return context.json({ ok: true });
 		}
 
-		if (text === '/help') {
+		if (text === '/help' || '/help@Tor_box_bot') {
 			await handleBotHelp(env, msg);
 			return context.json({ ok: true });
 		}
 
-		if (text === '/stats') {
+		if (text === '/stats' || '/help@Tor_box_bot') {
 			try {
 				const response = await fetchTorrentlist(env);
 
@@ -89,7 +89,7 @@ app.post('/webhook', async (context) => {
 			return context.json({ ok: true });
 		}
 
-		if (text === '/add') {
+		if (text === '/add' || '/add@Tor_box_bot') {
 			await sendMessage(env, chatId, 'Please provide a valid magnet link, e.g. /add magnet:?xt=urn:btih:...');
 			return context.json({ ok: true });
 		}
