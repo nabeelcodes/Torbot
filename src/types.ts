@@ -7,11 +7,6 @@ export type EnvBindings = {
 	TORBOX_API_BASE_URL: string;
 };
 
-export type TelegramUpdate = {
-	update_id: number;
-	message?: TelegramMessage;
-};
-
 export type TelegramMessage = {
 	message_id: number;
 	from?: {
@@ -27,6 +22,19 @@ export type TelegramMessage = {
 	};
 	date: number;
 	text?: string;
+};
+
+export type TelegramUpdate = {
+	update_id: number;
+	message?: TelegramMessage;
+};
+
+export type AppContext = {
+	Bindings: EnvBindings;
+	Variables: {
+		message?: string;
+		update?: TelegramUpdate;
+	};
 };
 
 export type TelegramQueryBody = {

@@ -1,9 +1,21 @@
 import { Hono } from 'hono';
 import { isMagnet, handleBotStart, sendMessage, handleBotHelp } from './controllers/telegramControllers';
 import { createTorrent, fetchTorrentlist } from './controllers/torboxControllers';
-import type { EnvBindings, TelegramUpdate } from './types';
+import type { AppContext, TelegramUpdate } from './types';
 
-const app = new Hono<{ Bindings: EnvBindings }>();
+const app = new Hono<AppContext>();
+
+// Middleware to clean the message of the bot username
+app.use(async (context, next) => {
+	const clone = context.req.raw.clone();
+	const update = (await clone.json()) as TelegramUpdate;
+	if (update.message?.text) {
+		const message = update.message.text.replace('@Tor_box_bot', '').trim();
+		context.set('message', message);
+	}
+	context.set('update', update);
+	await next();
+});
 
 app.get('/health', (context) => context.text('ok'));
 
@@ -11,12 +23,12 @@ app.post('/webhook', async (context) => {
 	const env = context.env;
 
 	try {
-		const update = (await context.req.json()) as TelegramUpdate;
-		const msg = update.message;
+		const update = context.get('update');
+		const msg = update?.message;
 
 		if (!msg) return context.json({ ok: true });
 
-		const text = msg.text?.trim();
+		const text = context.get('message') ?? msg?.text?.trim();
 		const chatId = msg.chat.id;
 
 		if (!text) {
@@ -24,17 +36,17 @@ app.post('/webhook', async (context) => {
 			return context.json({ ok: true });
 		}
 
-		if (text === '/start' || '/start@Tor_box_bot') {
+		if (text === '/start') {
 			await handleBotStart(env, msg);
 			return context.json({ ok: true });
 		}
 
-		if (text === '/help' || '/help@Tor_box_bot') {
+		if (text === '/help') {
 			await handleBotHelp(env, msg);
 			return context.json({ ok: true });
 		}
 
-		if (text === '/stats' || '/stats@Tor_box_bot') {
+		if (text === '/stats') {
 			try {
 				const response = await fetchTorrentlist(env);
 
@@ -89,7 +101,7 @@ app.post('/webhook', async (context) => {
 			return context.json({ ok: true });
 		}
 
-		if (text === '/add' || '/add@Tor_box_bot') {
+		if (text === '/add') {
 			await sendMessage(env, chatId, 'Please provide a valid magnet link, e.g. /add magnet:?xt=urn:btih:...');
 			return context.json({ ok: true });
 		}
