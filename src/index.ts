@@ -34,7 +34,7 @@ app.post('/webhook', async (context) => {
 			return context.json({ ok: true });
 		}
 
-		if (text === '/stats' || '/help@Tor_box_bot') {
+		if (text === '/stats' || '/stats@Tor_box_bot') {
 			try {
 				const response = await fetchTorrentlist(env);
 
