@@ -5,6 +5,7 @@ export type EnvBindings = {
 	TELEGRAM_BOT_TOKEN: string;
 	TORBOX_API_KEY: string;
 	TORBOX_API_BASE_URL: string;
+	TELEGRAM_ALLOWED_USER_ID: string;
 };
 
 export type TelegramMessage = {

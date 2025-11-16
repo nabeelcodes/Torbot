@@ -17,6 +17,38 @@ app.use(async (context, next) => {
 	await next();
 });
 
+// Middleware to check if the user is allowed to use the bot
+app.use(async (context, next) => {
+	const env = context.env;
+	// Check if env var exists
+	if (!env.TELEGRAM_ALLOWED_USER_ID) {
+		console.error('TELEGRAM_ALLOWED_USER_ID is not set');
+		return context.json({ ok: false, error: 'Server configuration error' }, 500);
+	}
+	// Trim whitespace from user IDs
+	const allowedUserIds = env.TELEGRAM_ALLOWED_USER_ID.split(',')
+		.map((id) => id.trim())
+		.filter((id) => id);
+	const update = context.get('update');
+	const userId = update?.message?.from?.id;
+	const chatId = update?.message?.chat?.id;
+	// Check authorization even if chatId is missing, and validate userId exists
+	if (!userId) {
+		// If there's no userId, reject (unless it's a non-message update that should be ignored)
+		await next();
+		return;
+	}
+	const isAllowed = allowedUserIds.includes(userId.toString());
+	// Check authorization regardless of chatId
+	if (!isAllowed) {
+		if (chatId) {
+			await sendMessage(env, chatId, 'You are not authorized to use this bot!');
+		}
+		return context.json({ ok: true });
+	}
+	await next();
+});
+
 app.get('/health', (context) => context.text('ok'));
 
 app.post('/webhook', async (context) => {
