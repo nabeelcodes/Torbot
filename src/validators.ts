@@ -19,7 +19,7 @@ export const TorboxMylistDataSchema = z.array(
 	z.object({
 		id: z.number().int().positive(),
 		name: z.string(),
-		size: z.number().int().positive(),
+		size: z.number(),
 		created_at: z.string(),
 		download_finished: z.boolean(),
 		cached: z.boolean(),

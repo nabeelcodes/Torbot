@@ -33,6 +33,7 @@ export type TelegramUpdate = {
 export type AppContext = {
 	Bindings: EnvBindings;
 	Variables: {
+		isCommand?: boolean;
 		message?: string;
 		update?: TelegramUpdate;
 	};

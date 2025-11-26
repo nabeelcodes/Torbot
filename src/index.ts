@@ -9,14 +9,19 @@ const app = new Hono<AppContext>();
 app.use(async (context, next) => {
 	const clone = context.req.raw.clone();
 	const update = (await clone.json()) as TelegramUpdate;
+
 	if (update.message?.text) {
 		const message = update.message.text.replace('@Tor_box_bot', '').trim();
-		context.set('message', message);
+		const isCommand = message.startsWith('/');
+		context.set('isCommand', isCommand);
+		if (isCommand) {
+			context.set('message', message);
+		}
 	}
+	
 	context.set('update', update);
 	await next();
 });
-
 // Middleware to check if the user is allowed to use the bot
 app.use(async (context, next) => {
 	const env = context.env;
@@ -53,12 +58,13 @@ app.get('/health', (context) => context.text('ok'));
 
 app.post('/webhook', async (context) => {
 	const env = context.env;
+	const update = context.get('update');
+	const isCommand = context.get('isCommand');
 
 	try {
-		const update = context.get('update');
 		const msg = update?.message;
 
-		if (!msg) return context.json({ ok: true });
+		if (!msg || !isCommand) return context.json({ ok: true });
 
 		const text = context.get('message') ?? msg?.text?.trim();
 		const chatId = msg.chat.id;
